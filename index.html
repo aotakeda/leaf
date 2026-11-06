@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaf</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+  <body data-theme="paper">
+    <div id="library" class="view">
+      <header class="topbar">
+        <h1>Leaf</h1>
+        <div class="spacer"></div>
+        <button id="theme-lib" class="icon" title="Change theme">◐</button>
+        <button id="add-books" class="primary">Add books</button>
+      </header>
+      <main id="grid" class="grid"></main>
+      <div id="empty" class="empty" hidden>
+        <p class="big">Your library is empty</p>
+        <p>Add EPUB or PDF files, or drop them anywhere in this window.</p>
+        <button id="add-books-empty" class="primary">Add books</button>
+      </div>
+    </div>
+
+    <div id="reader" class="view" hidden>
+      <header class="topbar reader-bar">
+        <button id="back" class="icon" title="Back to library">←</button>
+        <button id="toc-btn" class="icon" title="Contents">☰</button>
+        <div id="book-title" class="book-title"></div>
+        <div class="spacer"></div>
+        <div id="font-controls" class="group">
+          <button id="font-dec" class="icon" title="Smaller text">A−</button>
+          <button id="font-inc" class="icon" title="Larger text">A+</button>
+        </div>
+        <button id="theme-btn" class="icon" title="Change theme">◐</button>
+      </header>
+      <div class="reader-body">
+        <aside id="toc" class="toc" hidden></aside>
+        <button id="prev" class="nav prev" title="Previous page">‹</button>
+        <div id="viewer" class="viewer"></div>
+        <button id="next" class="nav next" title="Next page">›</button>
+      </div>
+      <footer class="reader-foot">
+        <div class="progress"><div id="progress-fill"></div></div>
+        <div class="foot-row">
+          <span id="loc-label"></span>
+          <span id="pct-label"></span>
+        </div>
+      </footer>
+      <div id="loading" class="loading" hidden>Opening…</div>
+    </div>
+
+    <div id="drop" class="drop" hidden>Drop EPUB or PDF files to add them</div>
+    <div id="toast" class="toast" hidden></div>
+  </body>
+</html>
