@@ -17,6 +17,22 @@ function mapToc(items: NavItem[]): TocItem[] {
   }));
 }
 
+function resolveTarget(book: any, target: string): string {
+  const spine = book.spine;
+  if (spine.get(target)) return target;
+  const [path, frag] = target.split("#");
+  const withFrag = (p: string) => (frag ? `${p}#${frag}` : p);
+  const navPath: string = book.packaging?.navPath || book.packaging?.ncxPath || "";
+  let resolved = path;
+  try {
+    resolved = decodeURI(new URL(path, `http://leaf/${navPath}`).pathname.slice(1));
+  } catch {}
+  if (spine.get(resolved)) return withFrag(resolved);
+  const name = resolved.split("/").pop();
+  const match = spine.spineItems.find((s: any) => decodeURI(s.href).split("/").pop() === name);
+  return match ? withFrag(match.href) : target;
+}
+
 export async function openEpub(
   el: HTMLElement,
   bookId: string,
@@ -28,7 +44,9 @@ export async function openEpub(
 ): Promise<Reader> {
   const book = ePub(data as unknown as string);
   (book.spine as any).hooks.content.register((doc: Document) => {
-    doc.querySelectorAll("script, iframe, object, embed, frame, frameset, form, base").forEach((el) => el.remove());
+    doc.querySelectorAll("script, iframe, object, embed, frame, frameset, form").forEach((el) => el.remove());
+    const sectionBase = doc.head?.querySelector("base");
+    doc.querySelectorAll("base").forEach((el) => el !== sectionBase && el.remove());
     doc.querySelectorAll("*").forEach((el) => {
       for (const attr of [...el.attributes]) {
         const name = attr.name.toLowerCase();
@@ -112,7 +130,9 @@ export async function openEpub(
   return {
     next: () => rendition.next(),
     prev: () => rendition.prev(),
-    goTo: (target) => rendition.display(target as string),
+    goTo: (target) => {
+      rendition.display(resolveTarget(book, target as string)).catch((e) => console.warn("goTo", target, e));
+    },
     toc: async () => mapToc((await book.loaded.navigation).toc),
     language: () => ((book as any).packaging?.metadata?.language as string | undefined) || null,
     setTheme: applyTheme,
