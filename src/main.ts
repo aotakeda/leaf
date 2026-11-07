@@ -239,9 +239,18 @@ function showChrome(e?: MouseEvent) {
   scheduleChromeHide();
 }
 
+function changeFontScale(delta: number) {
+  fontScale = Math.min(200, Math.max(70, fontScale + delta));
+  setPref("fontScale", fontScale);
+  reader?.setFontScale?.(fontScale);
+}
+
 function onKey(e: KeyboardEvent) {
   if (!reader) return;
-  if (["ArrowRight", "PageDown", " "].includes(e.key)) {
+  if ((e.metaKey || e.ctrlKey) && ["=", "+", "-"].includes(e.key)) {
+    e.preventDefault();
+    if (reader.setFontScale) changeFontScale(e.key === "-" ? -10 : 10);
+  } else if (["ArrowRight", "PageDown", " "].includes(e.key)) {
     e.preventDefault();
     hideDefinition();
     reader.next();
@@ -327,16 +336,8 @@ $("back").addEventListener("click", closeReader);
 $("toc-btn").addEventListener("click", () => ($("toc").hidden = !$("toc").hidden));
 $("prev").addEventListener("click", () => reader?.prev());
 $("next").addEventListener("click", () => reader?.next());
-$("font-dec").addEventListener("click", () => {
-  fontScale = Math.max(70, fontScale - 10);
-  setPref("fontScale", fontScale);
-  reader?.setFontScale?.(fontScale);
-});
-$("font-inc").addEventListener("click", () => {
-  fontScale = Math.min(200, fontScale + 10);
-  setPref("fontScale", fontScale);
-  reader?.setFontScale?.(fontScale);
-});
+$("font-dec").addEventListener("click", () => changeFontScale(-10));
+$("font-inc").addEventListener("click", () => changeFontScale(10));
 document.addEventListener("keydown", (e) => {
   if (!$("reader").hidden) onKey(e);
 });
