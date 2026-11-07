@@ -93,8 +93,15 @@ export async function openEpub(
 
   rendition.on("relocated", report);
 
+  let cursorHidden = false;
+  const applyCursor = (doc: Document) => doc.documentElement.classList.toggle("leaf-cursor-hidden", cursorHidden);
+
   (rendition as any).hooks.content.register((contents: any) => {
     const doc: Document = contents.document;
+    const cursorStyle = doc.createElement("style");
+    cursorStyle.textContent = ".leaf-cursor-hidden, .leaf-cursor-hidden * { cursor: none !important; }";
+    doc.head.appendChild(cursorStyle);
+    applyCursor(doc);
     doc.addEventListener("mouseup", () => {
       setTimeout(() => {
         const sel = contents.window.getSelection() as Selection | null;
@@ -109,6 +116,7 @@ export async function openEpub(
 
   rendition.on("click", () => cb.onClick());
   rendition.on("keydown", (e: KeyboardEvent) => cb.onKey(e));
+  rendition.on("mousemove", (e: MouseEvent) => cb.onMouseMove(e));
 
   await rendition.display(startAt ?? undefined).catch(() => rendition.display());
   report(rendition.currentLocation(), false);
@@ -137,6 +145,10 @@ export async function openEpub(
     language: () => ((book as any).packaging?.metadata?.language as string | undefined) || null,
     setTheme: applyTheme,
     setFontScale: (p) => rendition.themes.fontSize(`${p}%`),
+    setCursorHidden: (hidden) => {
+      cursorHidden = hidden;
+      for (const c of (rendition as any).getContents()) applyCursor(c.document);
+    },
     destroy: () => {
       rendition.destroy();
       book.destroy();

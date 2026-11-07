@@ -31,6 +31,9 @@ let fontScale: number = pref("fontScale", 100);
 let reader: Reader | null = null;
 let currentBook: Book | null = null;
 let saveTimer = 0;
+let chromeTimer = 0;
+let lastPointer = "";
+const CHROME_IDLE_MS = 2500;
 const coverUrls = new Map<string, string>();
 
 document.body.dataset.theme = theme;
@@ -212,6 +215,30 @@ function renderToc(items: TocItem[]) {
   build(items, 0);
 }
 
+function setChromeHidden(hidden: boolean) {
+  $("reader").classList.toggle("chrome-hidden", hidden);
+  reader?.setCursorHidden?.(hidden);
+}
+
+function scheduleChromeHide() {
+  clearTimeout(chromeTimer);
+  chromeTimer = window.setTimeout(() => {
+    const busy = !$("toc").hidden || document.querySelector(".reader-bar:hover, .reader-foot:hover");
+    if (busy) scheduleChromeHide();
+    else setChromeHidden(true);
+  }, CHROME_IDLE_MS);
+}
+
+function showChrome(e?: MouseEvent) {
+  if (e) {
+    const pos = `${e.screenX},${e.screenY}`;
+    if (pos === lastPointer) return;
+    lastPointer = pos;
+  }
+  setChromeHidden(false);
+  scheduleChromeHide();
+}
+
 function onKey(e: KeyboardEvent) {
   if (!reader) return;
   if (["ArrowRight", "PageDown", " "].includes(e.key)) {
@@ -231,6 +258,7 @@ async function openReader(book: Book) {
   currentBook = book;
   $("library").hidden = true;
   $("reader").hidden = false;
+  showChrome();
   $("loading").hidden = false;
   $("toc").hidden = true;
   $("book-title").textContent = book.title;
@@ -259,6 +287,7 @@ async function openReader(book: Book) {
     },
     onClick: hideDefinition,
     onKey,
+    onMouseMove: showChrome,
   };
 
   try {
@@ -274,6 +303,7 @@ async function openReader(book: Book) {
     closeReader();
   } finally {
     $("loading").hidden = true;
+    if (currentBook === book) showChrome();
   }
 }
 
@@ -282,6 +312,8 @@ function closeReader() {
   reader?.destroy();
   reader = null;
   currentBook = null;
+  clearTimeout(chromeTimer);
+  $("reader").classList.remove("chrome-hidden");
   $("reader").hidden = true;
   $("library").hidden = false;
   renderLibrary();
@@ -307,6 +339,9 @@ $("font-inc").addEventListener("click", () => {
 });
 document.addEventListener("keydown", (e) => {
   if (!$("reader").hidden) onKey(e);
+});
+document.addEventListener("mousemove", (e) => {
+  if (!$("reader").hidden) showChrome(e);
 });
 
 getCurrentWebview().onDragDropEvent((event) => {

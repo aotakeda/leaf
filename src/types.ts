@@ -12,6 +12,7 @@ export interface ReaderCallbacks {
   onSelect: (text: string, rect: DOMRect) => void;
   onClick: () => void;
   onKey: (e: KeyboardEvent) => void;
+  onMouseMove: (e: MouseEvent) => void;
 }
 
 export interface Reader {
@@ -22,5 +23,6 @@ export interface Reader {
   language(): string | null;
   setTheme(theme: Theme): void;
   setFontScale?(percent: number): void;
+  setCursorHidden?(hidden: boolean): void;
   destroy(): void;
 }

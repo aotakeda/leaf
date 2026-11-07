@@ -250,6 +250,20 @@ button.primary:hover {
 .reader-bar {
   padding: 8px 12px;
 }
+.reader-bar,
+.reader-foot {
+  transition: opacity 0.3s ease;
+}
+#reader.chrome-hidden .reader-bar,
+#reader.chrome-hidden .reader-foot,
+#reader.chrome-hidden .nav {
+  opacity: 0;
+  transition-duration: 0.6s;
+}
+#reader.chrome-hidden,
+#reader.chrome-hidden * {
+  cursor: none !important;
+}
 .book-title {
   font-weight: 600;
   margin-left: 6px;
